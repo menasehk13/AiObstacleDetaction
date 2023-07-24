@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <com.github.niqdev.mjpeg.MjpegSurfaceView
+        android:id="@+id/mjpegView"
+        android:layout_width="300dp"
+        android:layout_height="300dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintHorizontal_bias="0.495"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.064" />
+
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/constraintLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="60dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.496"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/mjpegView">
+
+        <Button
+            android:id="@+id/btnUp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="onUpButtonClicked"
+            android:text="for"
+            app:layout_constraintBottom_toTopOf="@id/btnDown"
+            app:layout_constraintEnd_toStartOf="@id/btnRight"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <!-- Down button -->
+        <Button
+            android:id="@+id/btnDown"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="onDownButtonClicked"
+            android:text="down"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/btnRight"
+            app:layout_constraintTop_toBottomOf="@id/btnUp" />
+
+        <!-- Left button -->
+        <Button
+            android:id="@+id/btnLeft"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="onLeftButtonClicked"
+            android:text="left"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/btnUp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <!-- Right button -->
+        <Button
+            android:id="@+id/btnRight"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="onRightButtonClicked"
+            android:text="right"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toEndOf="@id/btnUp"
+            app:layout_constraintTop_toTopOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="116dp"
+        android:backgroundTint="#FF5722"
+        android:text="AutoDrive"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/constraintLayout"
+        />
+</androidx.constraintlayout.widget.ConstraintLayout>
