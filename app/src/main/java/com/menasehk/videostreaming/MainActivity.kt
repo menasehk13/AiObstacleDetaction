@@ -78,12 +78,12 @@ override fun onCreate(savedInstanceState: Bundle?) {
             sendCommand("d")
         }
 
-
+    connectWebSocket()
     }
 
     override fun onResume() {
         super.onResume()
-        connectWebSocket()
+
         startStreaming()
 
     }

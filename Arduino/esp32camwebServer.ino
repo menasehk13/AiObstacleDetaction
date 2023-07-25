@@ -2,12 +2,16 @@
 #include "WiFi.h"
 #include "WebSocketsServer.h"
 
-const char* ssid = "test";
+const char* ssid = "zed";
 const char* password = "12615776";
 const int webServerPort = 80;
 WiFiServer server(webServerPort);
 const int webSocketPort = 81;
 WebSocketsServer webSocket = WebSocketsServer(webSocketPort);
+TaskHandle_t webSocketTaskHandle = NULL;
+TaskHandle_t videoStreamingTaskHandle = NULL;
+void webSocketTask(void *pvParameters);
+void videoStreamingTask(void *pvParameters);
 
 void onWebSocketEvent(uint8_t num, WStype_t type, uint8_t* payload, size_t length) {
   if (type == WStype_TEXT) {
@@ -25,7 +29,40 @@ void onWebSocketEvent(uint8_t num, WStype_t type, uint8_t* payload, size_t lengt
     }
   }
 }
+void webSocketTask(void *pvParameters) {
+  while (1) {
+    webSocket.loop();
+    delay(1);
+  }
+}
 
+void videoStreamingTask(void *pvParameters) {
+  while (1) {
+    WiFiClient client = server.available();
+    if (client) {
+      client.println("HTTP/1.1 200 OK");
+      client.println("Content-Type: multipart/x-mixed-replace; boundary=frame");
+      client.println();
+
+      while (true) {
+        camera_fb_t *fb = esp_camera_fb_get();
+        if (!fb) {
+          Serial.println("Camera capture failed");
+          break;
+        }
+        client.print("--frame\r\n");
+        client.print("Content-Type: image/jpeg\r\n");
+        client.print("Content-Length: " + String(fb->len) + "\r\n");
+        client.println("Cache-Control: no-store");
+        client.print("\r\n");
+        client.write(fb->buf, fb->len);
+        client.print("\r\n");
+        esp_camera_fb_return(fb);
+      }
+    }
+    delay(1);
+  }
+}
 void setup() {
   Serial.begin(115200);
   WiFi.begin(ssid, password);
@@ -75,31 +112,27 @@ void setup() {
   server.begin();
   webSocket.begin();
   webSocket.onEvent(onWebSocketEvent);
+
+  xTaskCreatePinnedToCore(
+      webSocketTask,
+      "WebSocketTask",
+      10000,
+      NULL,
+      1,
+      &webSocketTaskHandle,
+      0);
+
+
+  xTaskCreatePinnedToCore(
+      videoStreamingTask,
+      "VideoStreamingTask",
+      10000,
+      NULL,
+      1,
+      &videoStreamingTaskHandle,
+      1);
 }
 
 void loop() {
-WiFiClient client = server.available();
-  if (client) {
-    client.println("HTTP/1.1 200 OK");
-    client.println("Content-Type: multipart/x-mixed-replace; boundary=frame");
-    client.println();
 
-    while (true) {
-      camera_fb_t *fb = esp_camera_fb_get();
-      if (!fb) {
-        Serial.println("Camera capture failed");
-        break;
-      }
-      client.print("--frame\r\n");
-      client.print("Content-Type: image/jpeg\r\n");
-      client.print("Content-Length: " + String(fb->len) + "\r\n");
-      client.println("Cache-Control: no-store");
-      client.print("\r\n");
-      client.write(fb->buf, fb->len);
-      client.print("\r\n");
-      esp_camera_fb_return(fb);
-    }
-  }
-  webSocket.loop();
-  delay(1000);
 }
