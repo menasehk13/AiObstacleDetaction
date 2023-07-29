@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <com.github.niqdev.mjpeg.MjpegSurfaceView
+    <ImageView
         android:id="@+id/mjpegView"
         android:layout_width="300dp"
         android:layout_height="300dp"
@@ -32,7 +32,6 @@
             android:id="@+id/btnUp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:onClick="onUpButtonClicked"
             android:text="for"
             app:layout_constraintBottom_toTopOf="@id/btnDown"
             app:layout_constraintEnd_toStartOf="@id/btnRight"
@@ -43,7 +42,6 @@
             android:id="@+id/btnDown"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:onClick="onDownButtonClicked"
             android:text="down"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/btnRight"
