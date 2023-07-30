@@ -1,48 +1,40 @@
-void sendCameraPicture(AsyncWebServerRequest *request) {
-  camera_fb_t *fb = esp_camera_fb_get();
-  if (!fb) {
-    Serial.println("Frame buffer could not be acquired");
-    request->send(500, "text/plain", "Frame buffer not available");
-    return;
-  }
+  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send(200, "text/html", "<img src='/video_feed' width='640' height='480' />");
+  });
 
-  AsyncWebServerResponse *response = request->beginChunkedResponse("image/jpeg", [fb](uint8_t *buffer, size_t maxLen, size_t index, size_t total) -> size_t {
-    if (index == 0) {
-      return snprintf_P((char*)buffer, maxLen, "%s", "--frame\r\nContent-Type: image/jpeg\r\n\r\n");
-    } else {
-      size_t bytesRead = total - index;
-      if (bytesRead > maxLen) {
-        bytesRead = maxLen;
+  server.on("/video_feed", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->onDisconnect([]() {
+      Serial.println("Client disconnected");
+      client.stop();
+    });
+
+    request->send_P(200, "multipart/x-mixed-replace; boundary=frame", nullptr, nullptr, [](uint8_t *buffer, size_t maxLen, size_t index) -> size_t {
+      if (!client.connected()) {
+        Serial.println("Client not connected");
+        return 0;
       }
-      memcpy(buffer, fb->buf + index, bytesRead);
-      return bytesRead;
-    }
-  });
 
-  response->addHeader("Cache-Control", "no-cache");
-  response->addHeader("Connection", "close");
+      if (index == 0) {
+        camera_fb_t *fb = esp_camera_fb_get();
+        if (!fb) {
+          Serial.println("Camera capture failed");
+          return 0;
+        }
+        size_t len = snprintf_P((char*)buffer, maxLen, "--frame\r\nContent-Type: image/jpeg\r\nContent-Length: %u\r\n\r\n", fb->len);
+        memcpy(buffer + len, fb->buf, fb->len);
+        esp_camera_fb_return(fb);
+        return len + fb->len;
+      }
 
-  request->onDisconnect([fb]() {
-    esp_camera_fb_return(fb);
-  });
+      // Ensure no more data is sent when the client is disconnected
+      if (!client.connected()) {
+        Serial.println("Client disconnected during transmission");
+        return 0;
+      }
 
-  request->send(response);
-}
+      // Add a small delay to simulate the framerate (30 FPS in this case)
+      delay(33);
 
-
-void handleRoot(AsyncWebServerRequest *request) {
-  request->send(200, "text/html", "<img src='/video_feed' width='640' height='480' />");
-}
-
-
-  server.on("/video_feed", HTTP_GET, [](AsyncWebServerRequest *request){
-    if (request->hasArg("stream") && request->arg("stream") == "mjpeg") {
-      sendCameraPicture(request);
-    } else {
-      request->send(404);
-    }
-  });
-
-  server.onNotFound([](AsyncWebServerRequest *request) {
-    request->send(404);
+      return 0;
+    });
   });
