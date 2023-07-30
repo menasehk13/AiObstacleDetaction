@@ -6,11 +6,11 @@ void sendCameraPicture(AsyncWebServerRequest *request) {
     return;
   }
 
-  AsyncWebServerResponse *response = request->beginChunkedResponse("image/jpeg", [](uint8_t *buffer, size_t maxLen, size_t index) -> size_t {
+  AsyncWebServerResponse *response = request->beginChunkedResponse("image/jpeg", [fb](uint8_t *buffer, size_t maxLen, size_t index, size_t total) -> size_t {
     if (index == 0) {
       return snprintf_P((char*)buffer, maxLen, "%s", "--frame\r\nContent-Type: image/jpeg\r\n\r\n");
     } else {
-      size_t bytesRead = fb->len - index;
+      size_t bytesRead = total - index;
       if (bytesRead > maxLen) {
         bytesRead = maxLen;
       }
@@ -28,6 +28,7 @@ void sendCameraPicture(AsyncWebServerRequest *request) {
 
   request->send(response);
 }
+
 
 void handleRoot(AsyncWebServerRequest *request) {
   request->send(200, "text/html", "<img src='/video_feed' width='640' height='480' />");
