@@ -81,6 +81,26 @@ websocket_thread.start()
 # Run the keyboard input handling task asynchronously
 asyncio.get_event_loop().run_until_complete(handle_keyboard_input())
 
+
+
+
 # Wait for both threads to finish
 video_thread.join()
 websocket_thread.join()
+
+
+
+import websocket
+import time
+
+def send_data():
+    while True:
+        data = input("Enter data to send: ")
+        ws.send(data)
+        time.sleep(1)
+
+if __name__ == "__main__":
+    url = "ws://localhost:8080/"
+    ws = websocket.WebSocket()
+    ws.connect(url)
+    send_data()
