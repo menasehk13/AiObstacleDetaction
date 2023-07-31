@@ -12,17 +12,6 @@ websocket_server_url = "ws://example.com/ws"
 # Global variable to store the WebSocket connection
 websocket = None
 
-def receive_keyboard_input():
-    global websocket
-
-    while True:
-        # Read input from the keyboard
-        user_input = input("Enter data (f=forward, l=left, b=backward, r=right, s=stop): ")
-
-        # Send the data to the WebSocket server if the connection is established
-        if websocket:
-            asyncio.run(send_command(user_input))
-
 async def send_command(command):
     global websocket
     if websocket:
@@ -30,6 +19,15 @@ async def send_command(command):
         # Receive response from the WebSocket server (optional)
         response = await websocket.recv()
         print(f"Received from server: {response}")
+
+async def handle_keyboard_input():
+    while True:
+        # Read input from the keyboard
+        user_input = await asyncio.get_event_loop().run_in_executor(None, input, "Enter data (f=forward, l=left, b=backward, r=right, s=stop): ")
+
+        # Send the data to the WebSocket server if the connection is established
+        if websocket:
+            await send_command(user_input)
 
 def receive_video_stream():
     # Create VideoCapture object
@@ -79,6 +77,9 @@ websocket_thread = threading.Thread(target=asyncio.run, args=(connect_websocket(
 
 video_thread.start()
 websocket_thread.start()
+
+# Run the keyboard input handling task asynchronously
+asyncio.get_event_loop().run_until_complete(handle_keyboard_input())
 
 # Wait for both threads to finish
 video_thread.join()
