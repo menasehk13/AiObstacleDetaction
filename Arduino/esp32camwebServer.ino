@@ -278,5 +278,14 @@ void loop() {
    wsCamera.cleanupClients();
   wsCarInput.cleanupClients();
   sendCameraPicture();
-
+while (gpsSerial.available() > 0)
+  {
+    if (gps.encode(gpsSerial.read()))
+    {
+      if (gps.location.isValid())
+      {
+        double latitude = gps.location.lat();
+        double longitude = gps.location.lng();
+        sendLocationData(latitude, longitude); // Send GPS data to WebSocket clients
+      }
 }
