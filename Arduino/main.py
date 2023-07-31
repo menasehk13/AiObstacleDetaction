@@ -21,7 +21,7 @@ def receive_keyboard_input():
 
         # Send the data to the WebSocket server if the connection is established
         if websocket:
-            asyncio.run(websocket.send(user_input))
+            asyncio.get_event_loop().run_until_complete(websocket.send(user_input))
 
 def receive_video_stream():
     # Create VideoCapture object
@@ -59,7 +59,11 @@ async def connect_websocket():
         async with websockets.connect(websocket_server_url) as ws:
             websocket = ws
             # Start receiving keyboard input
-            await receive_keyboard_input()
+            receive_keyboard_task = asyncio.get_event_loop().create_task(receive_keyboard_input())
+            # Wait for the WebSocket connection to be closed
+            await websocket.wait_closed()
+            # Cancel the keyboard input task when the WebSocket is closed
+            receive_keyboard_task.cancel()
     except Exception as e:
         print(f"Error: {e}")
         # In case of an error, set the WebSocket connection to None
