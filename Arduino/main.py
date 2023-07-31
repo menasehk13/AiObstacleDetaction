@@ -1,7 +1,7 @@
 import cv2
 import threading
-import websockets
 import asyncio
+import websockets
 
 # Replace with the URL of the video stream
 video_url = "http://example.com/stream"
@@ -21,7 +21,15 @@ def receive_keyboard_input():
 
         # Send the data to the WebSocket server if the connection is established
         if websocket:
-            asyncio.get_event_loop().run_until_complete(websocket.send(user_input))
+            asyncio.run(send_command(user_input))
+
+async def send_command(command):
+    global websocket
+    if websocket:
+        await websocket.send(command)
+        # Receive response from the WebSocket server (optional)
+        response = await websocket.recv()
+        print(f"Received from server: {response}")
 
 def receive_video_stream():
     # Create VideoCapture object
@@ -53,20 +61,17 @@ def receive_video_stream():
     cv2.destroyAllWindows()
 
 async def connect_websocket():
+    global websocket
     try:
-        async with websockets.connect(websocket_server_url) as websocket:
-            while True:
-                # Read input from the keyboard
-                user_input = input("Enter data (f=forward, l=left, b=backward, r=right, s=stop): ")
-
-                # Send the data to the WebSocket server
-                await websocket.send(user_input)
-
-                # Receive response from the WebSocket server (optional)
-                response = await websocket.recv()
-                print(f"Received from server: {response}")
+        websocket = await websockets.connect(websocket_server_url)
+        # Start receiving commands from the WebSocket server
+        while True:
+            response = await websocket.recv()
+            print(f"Received from server: {response}")
     except Exception as e:
         print(f"Error: {e}")
+        # In case of an error, set the WebSocket connection to None
+        websocket = None
 
 # Create and start threads for video stream and WebSocket communication
 video_thread = threading.Thread(target=receive_video_stream)
