@@ -53,21 +53,20 @@ def receive_video_stream():
     cv2.destroyAllWindows()
 
 async def connect_websocket():
-    global websocket
-
     try:
-        async with websockets.connect(websocket_server_url) as ws:
-            websocket = ws
-            # Start receiving keyboard input
-            receive_keyboard_task = asyncio.get_event_loop().create_task(receive_keyboard_input())
-            # Wait for the WebSocket connection to be closed
-            await websocket.wait_closed()
-            # Cancel the keyboard input task when the WebSocket is closed
-            receive_keyboard_task.cancel()
+        async with websockets.connect(websocket_server_url) as websocket:
+            while True:
+                # Read input from the keyboard
+                user_input = input("Enter data (f=forward, l=left, b=backward, r=right, s=stop): ")
+
+                # Send the data to the WebSocket server
+                await websocket.send(user_input)
+
+                # Receive response from the WebSocket server (optional)
+                response = await websocket.recv()
+                print(f"Received from server: {response}")
     except Exception as e:
         print(f"Error: {e}")
-        # In case of an error, set the WebSocket connection to None
-        websocket = None
 
 # Create and start threads for video stream and WebSocket communication
 video_thread = threading.Thread(target=receive_video_stream)
